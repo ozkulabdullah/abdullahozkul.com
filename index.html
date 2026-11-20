@@ -131,19 +131,6 @@
   }
   .areas p { margin: 0; color: var(--muted); font-size: 1.02rem; }
 
-  /* Timeline */
-  .timeline { list-style: none; margin: 0; padding: 0; max-width: 44rem; }
-  .timeline li {
-    display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 0.25rem 1.5rem;
-    padding-block: 1.25rem; border-top: 1px solid var(--rule);
-  }
-  .timeline li:first-child { border-top: 0; padding-top: 0; }
-  .when { font-family: var(--display); font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 0.2rem; }
-  .role { font-family: var(--display); font-weight: 600; font-size: 1.2rem; line-height: 1.3; margin: 0; }
-  .org { margin: 0.1rem 0 0.4rem; }
-  .timeline p.note { margin: 0; color: var(--muted); font-size: 1.02rem; }
-  .now .when { color: var(--cobalt); font-weight: 600; }
-
   /* Contact */
   .contact-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.75rem; }
   .contact-list a {
@@ -160,7 +147,6 @@
   @media (max-width: 760px) {
     section.block { grid-template-columns: 1fr; }
     .areas { grid-template-columns: 1fr; gap: 1.75rem; }
-    .timeline li { grid-template-columns: 1fr; }
     .contours { width: 110%; opacity: 0.18; }
     .name span + span { padding-left: 0.2em; }
   }
@@ -195,10 +181,8 @@
   <section class="wrap block" id="hakkimda" aria-labelledby="h-about">
     <h2 id="h-about"><span lang="tr">Hakkımda</span><span lang="en">About</span></h2>
     <div>
-      <p lang="tr">Uluslararası İlişkiler mezunuyum. Kariyerim e-ticaret ve yazılım geliştirmeyle başladı, ardından dört yıl boyunca Mimar Sinan Mühendisler Birliği'nde Genel Sekreter olarak derneğin idari ve operasyonel yönetimini üstlendim.</p>
-      <p lang="tr">Bugün 1773 İTÜ Teknopark'ta kuluçka merkezi operasyonlarında, hızlandırma programlarının koordinasyonunda ve hibe ile proje başvurularında görev alıyorum. Tekrarlayan işleri tespit edip otomatikleştirmek, çalışma biçimimin merkezinde.</p>
-      <p lang="en">I studied International Relations. My career began in e-commerce and software development, followed by four years as Secretary General of the Mimar Sinan Engineers' Association, where I ran the association's administration and operations.</p>
-      <p lang="en">Today at 1773 İTÜ Teknopark I work on incubation operations, accelerator program coordination, and grant and project applications. Spotting repetitive work and automating it is at the core of how I work.</p>
+      <p lang="tr">Uluslararası İlişkiler mezunuyum. 1773 İTÜ Teknopark'ta girişimcilik ve iş geliştirme alanında çalışıyorum. Tekrarlayan işleri tespit edip otomatikleştirmek, çalışma biçimimin merkezinde.</p>
+      <p lang="en">I studied International Relations and work in entrepreneurship and business development at 1773 İTÜ Teknopark. Spotting repetitive work and automating it is at the core of how I work.</p>
     </div>
   </section>
 
@@ -228,35 +212,6 @@
     </ul>
   </section>
 
-  <section class="wrap block" id="deneyim" aria-labelledby="h-exp">
-    <h2 id="h-exp"><span lang="tr">Deneyim</span><span lang="en">Experience</span></h2>
-    <ol class="timeline">
-      <li class="now">
-        <div class="when"><span lang="tr">Ağustos 2026 – bugün</span><span lang="en">Aug 2026 – present</span></div>
-        <div>
-          <p class="role"><span lang="tr">Girişimcilik ve İş Geliştirme Uzman Yardımcısı</span><span lang="en">Assistant Specialist, Entrepreneurship and Business Development</span></p>
-          <p class="org">1773 İTÜ Teknopark</p>
-          <p class="note" lang="tr">Kuluçka operasyonları, hızlandırma programları, hibe başvuruları ve süreç otomasyonu.</p>
-          <p class="note" lang="en">Incubation operations, accelerator programs, grant applications and process automation.</p>
-        </div>
-      </li>
-      <li>
-        <div class="when">2022 – 2026</div>
-        <div>
-          <p class="role"><span lang="tr">Genel Sekreter</span><span lang="en">Secretary General</span></p>
-          <p class="org"><span lang="tr">Mimar Sinan Mühendisler Birliği</span><span lang="en">Mimar Sinan Engineers' Association</span></p>
-          <p class="note" lang="tr">Derneğin idari yönetimi, dijital iletişimi, etkinlik lojistiği ve dokümantasyon süreçleri.</p>
-          <p class="note" lang="en">Administration, digital communication, event logistics and documentation for the association.</p>
-        </div>
-      </li>
-      <li>
-        <div class="when"><span lang="tr">Önceki</span><span lang="en">Earlier</span></div>
-        <div>
-          <p class="role"><span lang="tr">E-ticaret ve yazılım geliştirme</span><span lang="en">E-commerce and software development</span></p>
-        </div>
-      </li>
-    </ol>
-  </section>
 
   <section class="wrap block" id="iletisim" aria-labelledby="h-contact">
     <h2 id="h-contact"><span lang="tr">İletişim</span><span lang="en">Contact</span></h2>
