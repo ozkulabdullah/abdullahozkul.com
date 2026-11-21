@@ -194,6 +194,9 @@
   .nd p { margin: 0; color: var(--muted); font-size: .97rem; }
   .nd input { font: 500 1.1rem var(--body); padding: .8rem 1rem; border-radius: 12px; border: 1.5px solid var(--line); width: 100%; color: var(--ink); }
   .nd input:focus { outline: none; border-color: var(--cobalt); box-shadow: 0 0 0 4px rgba(36,51,201,.15); }
+  .nd .fld { display: grid; gap: .35rem; font-size: .88rem; font-weight: 600; color: var(--ink); }
+  .nd #nd-pin { letter-spacing: .5em; font-variant-numeric: tabular-nums; }
+  .nd .btn[data-busy] { opacity: .6; cursor: progress; }
   .nd .err { color: #C42B4B; font-size: .88rem; min-height: 1.2em; margin: -.3rem 0 0; }
   .nd .row { display: flex; gap: .5rem; justify-content: flex-end; flex-wrap: wrap; }
   .nd .btn-sun { background: var(--cobalt); color: #fff; }
@@ -410,14 +413,17 @@
 
 <dialog id="name-dialog" aria-labelledby="nd-title">
   <form method="dialog" class="nd" id="name-form" novalidate>
-    <h3 id="nd-title"><span lang="tr">Kullanıcı adın ne?</span><span lang="en">What's your player name?</span></h3>
-    <p lang="tr">Skorların bu adla ortak skor tablosuna yazılacak. Ad bu cihazda hatırlanır.</p>
-    <p lang="en">Your scores go on the shared leaderboard under this name. It's remembered on this device.</p>
-    <input id="nd-input" name="player" maxlength="16" autocomplete="nickname" autocapitalize="words" spellcheck="false" placeholder="örn. Abdullah">
+    <h3 id="nd-title"><span lang="tr">Oyuncu girişi</span><span lang="en">Player sign-in</span></h3>
+    <p lang="tr">Adı ilk kez kullanıyorsan, seçtiğin PIN bu adın kilidi olur. Daha önce kullandıysan aynı PIN'i gir. Başka cihazlarda da aynı ad ve PIN ile devam edersin.</p>
+    <p lang="en">If the name is new, the PIN you choose locks it. If you've used it before, enter the same PIN. Use the same name and PIN on any device.</p>
+    <label class="fld"><span lang="tr">Kullanıcı adı</span><span lang="en">Player name</span>
+      <input id="nd-input" name="player" maxlength="16" autocomplete="nickname" autocapitalize="words" spellcheck="false" placeholder="örn. Abdullah"></label>
+    <label class="fld"><span lang="tr">4 haneli PIN</span><span lang="en">4-digit PIN</span>
+      <input id="nd-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="••••"></label>
     <p class="err" id="nd-err" aria-live="polite"></p>
     <div class="row">
       <button class="btn btn-plain" type="button" id="nd-skip"><span lang="tr">Şimdilik geç</span><span lang="en">Skip for now</span></button>
-      <button class="btn btn-sun" type="submit"><span lang="tr">Kaydet ve oyna</span><span lang="en">Save and play</span></button>
+      <button class="btn btn-sun" type="submit" id="nd-save"><span lang="tr">Giriş yap ve oyna</span><span lang="en">Sign in and play</span></button>
     </div>
   </form>
 </dialog>
@@ -566,38 +572,60 @@ tabs.forEach(tab => tab.addEventListener("click", () => {
   if (tab.id === "tab-2048") { Drone.pause(); $("#g2048").focus({ preventScroll: true }); }
 }));
 
-/* ================= Oyuncu adı ================= */
+/* ================= Oyuncu (ad + PIN) ================= */
 const Player = (function () {
-  const dlg = $("#name-dialog"), form = $("#name-form"), input = $("#nd-input"), err = $("#nd-err");
-  let name = store.get("playerName", ""), skipped = false, pending = null;
-  function clean(v) { return String(v || "").replace(/[<>"'`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 16); }
+  const dlg = $("#name-dialog"), form = $("#name-form"), input = $("#nd-input"), pinEl = $("#nd-pin"), err = $("#nd-err"), saveBtn = $("#nd-save");
+  let name = store.get("playerName", ""), pin = store.get("playerPin", ""), skipped = false, pending = null;
+  const best = { drone: 0, g2048: 0 };
+  function clean(v) { return String(v || "").replace(/[<>"'`\\=+@]/g, "").replace(/\s+/g, " ").trim().slice(0, 16); }
+  const T = (tr, en) => LANG === "tr" ? tr : en;
   function paint() {
     document.querySelectorAll("[data-player]").forEach(b => {
-      b.textContent = name ? name : (LANG === "tr" ? "Ad seç" : "Pick a name");
-      b.title = LANG === "tr" ? "Kullanıcı adını değiştir" : "Change player name";
+      b.textContent = name && pin ? name : T("Ad seç", "Pick a name");
+      b.title = T("Kullanıcı adını değiştir", "Change player name");
     });
+    window.dispatchEvent(new CustomEvent("player-best", { detail: best }));
   }
   function ask(then) {
-    pending = then || null; err.textContent = ""; input.value = name;
-    if (typeof dlg.showModal === "function") { dlg.showModal(); setTimeout(() => input.focus(), 30); }
-    else { const v = clean(prompt(LANG === "tr" ? "Kullanıcı adın:" : "Player name:", name)); if (v.length >= 2) save(v); else { skipped = true; done(); } }
+    pending = then || null; err.textContent = ""; input.value = name; pinEl.value = "";
+    if (typeof dlg.showModal === "function") { dlg.showModal(); setTimeout(() => (name ? pinEl : input).focus(), 30); }
+    else { skipped = true; done(); }
   }
-  function save(v) { name = v; store.set("playerName", name); paint(); Leaderboard.refreshAll(); done(); }
   function done() { const f = pending; pending = null; if (dlg.open) dlg.close(); if (f) setTimeout(f, 30); }
-  form.addEventListener("submit", e => {
+  function setBest(b) { if (b) Object.keys(best).forEach(k => { best[k] = Number(b[k]) || 0; }); paint(); }
+  form.addEventListener("submit", async e => {
     e.preventDefault();
-    const v = clean(input.value);
-    if (v.length < 2) { err.textContent = LANG === "tr" ? "En az 2 karakter yaz." : "Use at least 2 characters."; input.focus(); return; }
-    save(v);
+    const v = clean(input.value), p = pinEl.value.trim();
+    if (v.length < 2) { err.textContent = T("Kullanıcı adı en az 2 karakter olmalı.", "Use at least 2 characters."); input.focus(); return; }
+    if (!/^\d{4}$/.test(p)) { err.textContent = T("PIN 4 haneli bir sayı olmalı.", "PIN must be 4 digits."); pinEl.focus(); return; }
+    err.textContent = ""; saveBtn.disabled = true; saveBtn.dataset.busy = "1";
+    try {
+      const j = await Leaderboard.login(v, p);
+      name = j.name; pin = p; skipped = false;
+      store.set("playerName", name); store.set("playerPin", pin);
+      setBest(j.best); Leaderboard.refreshAll();
+      done();
+    } catch (ex) {
+      err.textContent = ex.message === "network" ? T("Sunucuya ulaşılamadı. Biraz sonra tekrar dene ya da şimdilik geç.", "Couldn't reach the server. Try again or skip for now.") : ex.message;
+    } finally { saveBtn.disabled = false; delete saveBtn.dataset.busy; }
   });
   $("#nd-skip").addEventListener("click", () => { skipped = true; done(); });
   dlg.addEventListener("cancel", () => { skipped = true; pending = null; });
   document.querySelectorAll("[data-player]").forEach(b => b.addEventListener("click", () => ask()));
+  pinEl.addEventListener("input", () => { pinEl.value = pinEl.value.replace(/\D/g, "").slice(0, 4); });
+  // Kayıtlı oyuncu varsa rekorlarını sunucudan çek (PIN'i de doğrular)
+  async function restore() {
+    if (!SCORE_API || !name || !pin) return;
+    try { const j = await Leaderboard.login(name, pin); name = j.name; setBest(j.best); }
+    catch (ex) { if (ex.message !== "network") { pin = ""; store.set("playerPin", ""); paint(); } }
+  }
   return {
-    get name() { return name; },
-    ready() { return !!name || skipped || !SCORE_API; },
+    get name() { return name && pin ? name : ""; },
+    get pin() { return pin; },
+    best,
+    ready() { return !!(name && pin) || skipped || !SCORE_API; },
     ensure(then) { if (this.ready()) then(); else ask(then); },
-    paint
+    setBest, paint, restore
   };
 })();
 
@@ -630,29 +658,36 @@ const Leaderboard = (function () {
       li.append(n, b); ol.appendChild(li);
     });
   }
-  async function call(params, opts) {
-    const url = SCORE_API + "?" + new URLSearchParams(params).toString();
-    const r = await fetch(url, Object.assign({ redirect: "follow" }, opts || {}));
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || "error");
-    return j;
+  async function get(params) {
+    let r;
+    try { r = await fetch(SCORE_API + "?" + new URLSearchParams(params).toString()); } catch (e) { throw new Error("network"); }
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || "error"); return j;
+  }
+  async function post(body, keepalive) {
+    let r;
+    // text/plain gövde: tarayıcı ön kontrol (CORS preflight) yapmaz, Apps Script doPost ile okur
+    try { r = await fetch(SCORE_API, { method: "POST", body: JSON.stringify(body), keepalive: !!keepalive }); } catch (e) { throw new Error("network"); }
+    let j; try { j = await r.json(); } catch (e) { throw new Error("network"); }
+    if (!j.ok) throw new Error(j.error || "error"); return j;
   }
   async function load(game) {
     if (!SCORE_API) return render(game);
     status[game] = "load"; render(game);
-    try { const j = await call({ action: "top", game }); data[game] = j.top; status[game] = "ok"; }
+    try { const j = await get({ action: "top", game }); data[game] = j.top; status[game] = "ok"; }
     catch (e) { status[game] = "err"; }
     render(game);
   }
+  function login(name, pin) { return post({ action: "login", name, pin }); }
   async function submit(game, score) {
     if (!SCORE_API || !Player.name || !(score > 0)) return;
     try {
-      const j = await call({ action: "submit", game, name: Player.name, score, device: deviceId }, { keepalive: true });
+      const j = await post({ action: "submit", game, name: Player.name, pin: Player.pin, score, device: deviceId }, true);
       data[game] = j.top; status[game] = "ok"; render(game);
+      Player.setBest(j.best);
     } catch (e) { /* sessizce geç */ }
   }
   function refreshAll() { ["drone", "g2048"].forEach(render); }
-  return { load, submit, refreshAll, render };
+  return { load, submit, login, refreshAll, render };
 })();
 
 /* ================= Oyun 1: Drone Rotası ================= */
@@ -660,8 +695,9 @@ const Drone = (function () {
   const cv = $("#drone"), ctx = cv.getContext("2d");
   const W = 960, H = 540;
   const overlay = $("#drone-overlay");
-  let state = "idle", d, towers, cells, score, best = store.get("droneBest", 0), speed, frame, spawnT, raf, lastTs = 0;
+  let state = "idle", d, towers, cells, score, best = 0, speed, frame, spawnT, raf, lastTs = 0;
   $("#d-best").textContent = best;
+  addEventListener("player-best", e => { best = e.detail.drone || 0; $("#d-best").textContent = best; });
 
   function reset() {
     d = { x: 220, y: H / 2, vy: 0, battery: 100, tilt: 0 };
@@ -704,7 +740,7 @@ const Drone = (function () {
   }
   function end() {
     state = "over";
-    if (score > best) { best = score; store.set("droneBest", best); $("#d-best").textContent = best; }
+    if (score > best) { best = score; $("#d-best").textContent = best; }
     const tr = LANG === "tr";
     $("#drone-title").innerHTML = tr ? "Drone indi 🪂" : "Drone down 🪂";
     $("#drone-msg").innerHTML = (tr ? `Skor: <b>${score}</b>. En iyi: <b>${best}</b>` : `Score: <b>${score}</b>. Best: <b>${best}</b>`);
@@ -828,9 +864,10 @@ function renderLadder() {
 
 const G2048 = (function () {
   const N = 4, gridEl = $("#grid"), board = $("#g2048");
-  let cells, score, best = store.get("g2048Best", 0), won = false, idc = 0, tileLayer, msgEl, submitted = false;
+  let cells, score, best = 0, won = false, idc = 0, tileLayer, msgEl, submitted = false;
   function submitOnce() { if (!submitted && score > 0) { submitted = true; Leaderboard.submit("g2048", score); } }
   $("#g-best").textContent = best;
+  addEventListener("player-best", e => { best = Math.max(e.detail.g2048 || 0, 0); $("#g-best").textContent = best; });
   for (let i = 0; i < N * N; i++) gridEl.insertAdjacentHTML("beforeend", '<div class="cell"></div>');
   tileLayer = document.createElement("div"); tileLayer.className = "tiles"; gridEl.appendChild(tileLayer);
 
@@ -872,7 +909,7 @@ const G2048 = (function () {
     }
     if (moved) {
       add(); render();
-      if (score > best) { best = score; store.set("g2048Best", best); $("#g-best").textContent = best; }
+      if (score > best) { best = score; $("#g-best").textContent = best; }
       if (!canMove()) { submitOnce(); setTimeout(() => showMsg(false), 250); }
     }
   }
@@ -949,7 +986,7 @@ const G2048 = (function () {
 setLang(store.get("lang", null) || ((navigator.language || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 $("#year").textContent = new Date().getFullYear();
 Player.paint();
-Leaderboard.load("drone"); Leaderboard.load("g2048");
+Leaderboard.load("drone"); Leaderboard.load("g2048"); Player.restore();
 </script>
 </body>
 </html>
