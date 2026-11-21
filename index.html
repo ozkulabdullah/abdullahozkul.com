@@ -798,7 +798,7 @@ const Drone = (function () {
     Leaderboard.submit("drone", score);
   }
   /* ---------- İstanbul silüeti (katmanlar bir kez çizilir, sonra kaydırılır) ---------- */
-  const HORIZON = H - 70, QUAY = H - 28, TW = 2880;
+  const HORIZON = H - 70, QUAY = H - 28, TW = 3600;
   function layer(draw) { const c = document.createElement("canvas"); c.width = TW; c.height = H; draw(c.getContext("2d")); return c; }
   function minaret(g, x, base, h, w, col) {
     g.fillStyle = col;
@@ -851,13 +851,13 @@ const Drone = (function () {
     };
     puff(120, 90, 0.9, .9); puff(520, 150, 0.6, .75); puff(980, 70, 1.1, .85); puff(1380, 170, 0.7, .7); puff(1700, 110, 0.85, .85);
   });
-  // Uzak katman: Anadolu yakası, iki Boğaz köprüsü, Haydarpaşa ve Beylerbeyi
+  // Uzak katman: Anadolu yakası tepeleri ve iki Boğaz köprüsü
   function suspensionBridge(g, bx0, bx1, p1, p2, deck, top, col) {
     g.strokeStyle = col; g.fillStyle = col;
     g.fillRect(bx0, deck - 4, bx1 - bx0, 5);
     [p1, p2].forEach(px => {
-      g.fillRect(px - 7, top, 4, deck - top + 22); g.fillRect(px + 3, top, 4, deck - top + 22);   // iki ayak
-      g.fillRect(px - 3, top + 8, 6, 3); g.fillRect(px - 3, top + 60, 6, 3);                      // ayaklar arası kiriş
+      g.fillRect(px - 7, top, 4, deck - top + 22); g.fillRect(px + 3, top, 4, deck - top + 22);
+      g.fillRect(px - 3, top + 8, 6, 3); g.fillRect(px - 3, top + 60, 6, 3);
     });
     g.lineWidth = 1.6; g.beginPath();
     g.moveTo(bx0, deck - 4); g.quadraticCurveTo((bx0 + p1) / 2, deck - 20, p1, top + 2);
@@ -872,104 +872,127 @@ const Drone = (function () {
     g.beginPath(); g.moveTo(0, HORIZON);
     for (let x = 0; x <= TW; x += 40) g.lineTo(x, HORIZON - 26 - 18 * Math.sin(x / 210) - 10 * Math.sin(x / 67));
     g.lineTo(TW, HORIZON); g.fill();
-    suspensionBridge(g, 260, 900, 420, 740, HORIZON - 22, HORIZON - 140, col);
-    suspensionBridge(g, 1900, 2560, 2070, 2390, HORIZON - 22, HORIZON - 150, col);
-    // Haydarpaşa Garı: kale gibi gövde, köşelerde sivri çatılı iki kule
-    g.fillStyle = col;
-    g.fillRect(1180, HORIZON - 70, 150, 48);
-    [1176, 1310].forEach(x => { g.fillRect(x, HORIZON - 96, 24, 74); g.beginPath(); g.moveTo(x - 2, HORIZON - 96); g.lineTo(x + 12, HORIZON - 124); g.lineTo(x + 26, HORIZON - 96); g.fill(); });
-    g.beginPath(); g.moveTo(1200, HORIZON - 70); g.lineTo(1255, HORIZON - 92); g.lineTo(1310, HORIZON - 70); g.fill();
-    // Beylerbeyi Sarayı: alçak, uzun saray cephesi
-    g.fillRect(1520, HORIZON - 44, 220, 22); g.fillRect(1590, HORIZON - 56, 80, 14);
-    g.fillStyle = "rgba(255,255,255,.35)";
-    for (let x = 1528; x < 1736; x += 12) g.fillRect(x, HORIZON - 38, 5, 9);
+    suspensionBridge(g, 500, 1140, 660, 980, HORIZON - 22, HORIZON - 140, col);
+    suspensionBridge(g, 2300, 2960, 2470, 2790, HORIZON - 22, HORIZON - 150, col);
   });
 
-  // Orta katman: Tarihi Yarımada, Galata, Dolmabahçe, Ortaköy, yalılar, Rumeli Hisarı
+  // Orta katman: seçilen 15 eser, listedeki sırayla yan yana
   const midL = layer(g => {
     const col = "#4F73B5", base = HORIZON + 2, win = "rgba(255,255,255,.32)";
+    const W_ = (f) => { g.fillStyle = win; f(); g.fillStyle = col; };
     g.fillStyle = col;
-    // şehir dokusu
+    // kıyı şeridi
     g.beginPath(); g.moveTo(0, base);
-    for (let x = 0; x <= TW; x += 18) g.lineTo(x, base - 16 - ((x * 7919) % 21));
+    for (let x = 0; x <= TW; x += 18) g.lineTo(x, base - 10 - ((x * 7919) % 13));
     g.lineTo(TW, base); g.fill();
 
-    // Topkapı Sarayı: surlar, mutfak kubbeleri, Adalet Kulesi
-    for (let x = 40; x < 250; x += 12) { g.fillRect(x, base - 40, 8, 40); g.fillRect(x - 2, base - 46, 4, 6); g.fillRect(x + 6, base - 46, 4, 6); }
-    g.fillRect(140, base - 120, 22, 80); g.fillRect(136, base - 96, 30, 6);
-    g.beginPath(); g.moveTo(134, base - 120); g.lineTo(151, base - 168); g.lineTo(168, base - 120); g.fill();
-    for (let i = 0; i < 5; i++) dome(g, 60 + i * 16, base - 46, 7, 6, col);
-    dome(g, 215, base - 46, 12, 9, col);
+    // 1. Dolmabahçe Sarayı (+ Saat Kulesi)
+    { const x0 = 40, x1 = 360;
+      g.fillRect(x0, base - 50, x1 - x0, 50); g.fillRect(x0 - 6, base - 54, x1 - x0 + 12, 5);
+      g.fillRect(160, base - 74, 80, 24);
+      g.beginPath(); g.moveTo(154, base - 74); g.lineTo(200, base - 92); g.lineTo(246, base - 74); g.fill();
+      [x0 + 10, x1 - 50].forEach(x => g.fillRect(x, base - 64, 40, 14));
+      W_(() => { for (let x = x0 + 8; x < x1 - 8; x += 13) [base - 44, base - 26].forEach(y => { g.fillRect(x, y, 6, 10); g.beginPath(); g.arc(x + 3, y, 3, Math.PI, 0); g.fill(); });
+                 for (let x = 168; x < 234; x += 12) g.fillRect(x, base - 68, 6, 12); });
+      const sx = 395;
+      g.fillRect(sx - 10, base - 92, 20, 92); g.fillRect(sx - 13, base - 112, 26, 22); g.fillRect(sx - 15, base - 114, 30, 4);
+      dome(g, sx, base - 114, 11, 10, col);
+      g.fillStyle = "rgba(255,255,255,.75)"; g.beginPath(); g.arc(sx, base - 101, 7, 0, 7); g.fill();
+      g.fillStyle = col; g.fillRect(sx - 0.7, base - 106, 1.4, 5); g.fillRect(sx, base - 101.7, 4, 1.4); }
 
-    // Ayasofya
-    g.fillRect(300, base - 60, 26, 60); g.fillRect(450, base - 60, 26, 60);
-    mosque(g, 388, base, 1.25, col, { R: 40, flat: true, minarets: [[-78, 112, 7], [-60, 98, 6], [64, 98, 6], [82, 112, 7]] });
-    // Sultanahmet
-    mosque(g, 640, base, 1.2, col, { R: 33, minarets: [[-112, 150], [-74, 168], [-58, 168], [58, 168], [74, 168], [112, 150]] });
-    // Beyazıt Yangın Kulesi: yuvarlak gövde, geniş gözetleme katı, küçük kubbe
-    g.fillRect(838, base - 120, 14, 120);
-    g.fillRect(834, base - 146, 22, 26);
-    g.fillRect(832, base - 148, 26, 4);
-    dome(g, 845, base - 148, 9, 9, col);
-    g.fillStyle = win; [base - 140, base - 132].forEach(y => { g.fillRect(838, y, 3, 5); g.fillRect(845, y, 3, 5); }); g.fillStyle = col;
-    // Süleymaniye
-    g.fillRect(900, base - 30, 260, 30);
-    mosque(g, 1030, base - 26, 1.35, col, { R: 34, minarets: [[-96, 138], [-70, 160], [70, 160], [96, 138]] });
-    // Yeni Cami
-    mosque(g, 1270, base, 0.95, col, { R: 30, minarets: [[-62, 140], [62, 140]] });
-    // Galata Köprüsü (alçak, kemerli)
-    g.fillRect(1340, base - 14, 140, 5);
-    for (let x = 1346; x < 1480; x += 20) g.fillRect(x, base - 9, 4, 9);
+    // 2. Topkapı Sarayı
+    { for (let x = 450; x < 660; x += 12) { g.fillRect(x, base - 40, 8, 40); g.fillRect(x - 2, base - 46, 4, 6); g.fillRect(x + 6, base - 46, 4, 6); }
+      g.fillRect(550, base - 120, 22, 80); g.fillRect(546, base - 96, 30, 6);
+      g.beginPath(); g.moveTo(544, base - 120); g.lineTo(561, base - 168); g.lineTo(578, base - 120); g.fill();
+      for (let i = 0; i < 5; i++) dome(g, 466 + i * 16, base - 46, 7, 6, col);
+      dome(g, 625, base - 46, 12, 9, col); }
 
-    // Galata Kulesi ve Karaköy
-    const gx = 1560;
-    g.fillRect(gx - 22, base - 40, 44, 40);
-    g.fillRect(gx - 16, base - 176, 32, 140);
-    g.fillRect(gx - 20, base - 150, 40, 5);
-    g.fillRect(gx - 19, base - 176, 38, 12);
-    g.beginPath(); g.moveTo(gx - 19, base - 176); g.lineTo(gx, base - 232); g.lineTo(gx + 19, base - 176); g.fill();
-    g.fillRect(gx - 0.8, base - 242, 1.6, 10);
-    g.fillStyle = win; [[gx - 10, base - 160], [gx + 6, base - 160], [gx - 2, base - 120], [gx - 2, base - 90]].forEach(([x, y]) => g.fillRect(x, y, 3, 6)); g.fillStyle = col;
-    for (let x = 1620; x < 1760; x += 26) g.fillRect(x, base - 30 - ((x * 31) % 34), 22, 60);
+    // 3. Sultanahmet Meydanı: Dikilitaş, Örme Dikilitaş, Alman Çeşmesi, ağaçlar
+    { const ob = (x, h, w) => { g.fillRect(x - w, base - 14, w * 2, 14); g.beginPath(); g.moveTo(x - w * 0.6, base - 14); g.lineTo(x - w * 0.4, base - 14 - h); g.lineTo(x, base - 14 - h - w * 0.9); g.lineTo(x + w * 0.4, base - 14 - h); g.lineTo(x + w * 0.6, base - 14); g.fill(); };
+      ob(715, 100, 10); ob(800, 84, 9);
+      g.fillRect(742, base - 34, 34, 34); g.fillRect(738, base - 38, 42, 5); dome(g, 759, base - 38, 15, 13, col);
+      W_(() => { g.fillRect(747, base - 28, 5, 12); g.fillRect(766, base - 28, 5, 12); });
+      [690, 830].forEach(x => { g.beginPath(); g.arc(x, base - 30, 14, 0, 7); g.fill(); g.fillRect(x - 2, base - 20, 4, 20); }); }
 
-    // Dolmabahçe Sarayı: uzun cephe, orta köşk, kemerli pencereler
-    const dx0 = 1800, dx1 = 2140;
-    g.fillRect(dx0, base - 50, dx1 - dx0, 50);
-    g.fillRect(dx0 - 6, base - 54, dx1 - dx0 + 12, 5);
-    g.fillRect(1930, base - 74, 80, 24);                                          // orta köşk
-    g.beginPath(); g.moveTo(1924, base - 74); g.lineTo(1970, base - 92); g.lineTo(2016, base - 74); g.fill(); // alınlık
-    [dx0 + 10, dx1 - 50].forEach(x => g.fillRect(x, base - 64, 40, 14));           // yan köşkler
-    g.fillStyle = win;
-    for (let x = dx0 + 8; x < dx1 - 8; x += 13) {
-      [base - 44, base - 26].forEach(y => { g.fillRect(x, y, 6, 10); g.beginPath(); g.arc(x + 3, y, 3, Math.PI, 0); g.fill(); });
-    }
-    for (let x = 1938; x < 2004; x += 12) g.fillRect(x, base - 68, 6, 12);
-    g.fillStyle = col;
-    // Dolmabahçe Saat Kulesi: kare gövde, saat katı, küçük kubbe
-    const sx = 2180;
-    g.fillRect(sx - 10, base - 92, 20, 92);
-    g.fillRect(sx - 13, base - 112, 26, 22);
-    g.fillRect(sx - 15, base - 114, 30, 4);
-    dome(g, sx, base - 114, 11, 10, col);
-    g.fillStyle = "rgba(255,255,255,.75)"; g.beginPath(); g.arc(sx, base - 101, 7, 0, 7); g.fill();
-    g.fillStyle = col; g.fillRect(sx - 0.7, base - 106, 1.4, 5); g.fillRect(sx, base - 101.7, 4, 1.4);
+    // 4. Sultanahmet Camii (altı minare)
+    mosque(g, 975, base, 1.2, col, { R: 33, minarets: [[-112, 150], [-74, 168], [-58, 168], [58, 168], [74, 168], [112, 150]] });
 
-    // Ortaköy Camii: kıyıda, iki minareli küçük cami
-    mosque(g, 2290, base, 0.7, col, { R: 30, minarets: [[-58, 150], [58, 150]] });
-    // Boğaz yalıları
-    for (let i = 0; i < 6; i++) {
-      const x = 2370 + i * 36, h = 30 + (i % 3) * 8;
-      g.fillRect(x, base - h, 30, h);
-      g.beginPath(); g.moveTo(x - 3, base - h); g.lineTo(x + 15, base - h - 12); g.lineTo(x + 33, base - h); g.fill();
-      g.fillStyle = win; g.fillRect(x + 5, base - h + 8, 5, 7); g.fillRect(x + 18, base - h + 8, 5, 7); g.fillStyle = col;
-    }
-    // Rumeli Hisarı: yamaca tırmanan surlar ve konik çatılı kuleler
-    g.beginPath(); g.moveTo(2600, base); g.lineTo(2600, base - 24); g.lineTo(2700, base - 60); g.lineTo(2800, base - 40); g.lineTo(2860, base - 70); g.lineTo(2860, base); g.fill();
-    [[2610, 64, 26], [2700, 96, 34], [2850, 104, 30]].forEach(([x, h, w]) => {
-      g.fillRect(x - w / 2, base - h, w, h);
-      g.beginPath(); g.moveTo(x - w / 2 - 3, base - h); g.lineTo(x, base - h - w * 1.1); g.lineTo(x + w / 2 + 3, base - h); g.fill();
-      for (let k = -w / 2 + 2; k < w / 2 - 2; k += 7) g.fillRect(x + k, base - h + 6, 4, 5);
-    });
+    // 5. Ayasofya
+    g.fillRect(1180, base - 60, 26, 60); g.fillRect(1330, base - 60, 26, 60);
+    mosque(g, 1268, base, 1.25, col, { R: 40, flat: true, minarets: [[-78, 112, 7], [-60, 98, 6], [64, 98, 6], [82, 112, 7]] });
+
+    // 7. Galata Kulesi
+    { const gx = 1450;
+      g.fillRect(gx - 22, base - 40, 44, 40); g.fillRect(gx - 16, base - 176, 32, 140);
+      g.fillRect(gx - 20, base - 150, 40, 5); g.fillRect(gx - 19, base - 176, 38, 12);
+      g.beginPath(); g.moveTo(gx - 19, base - 176); g.lineTo(gx, base - 232); g.lineTo(gx + 19, base - 176); g.fill();
+      g.fillRect(gx - 0.8, base - 242, 1.6, 10);
+      W_(() => [[gx - 10, base - 160], [gx + 6, base - 160], [gx - 2, base - 120], [gx - 2, base - 90]].forEach(([x, y]) => g.fillRect(x, y, 3, 6)));
+      for (let x = 1490; x < 1540; x += 24) g.fillRect(x, base - 26 - ((x * 31) % 20), 20, 40); }
+
+    // 9. Ortaköy Camii (kıyıda, iki minare)
+    g.fillRect(1560, base - 8, 120, 8);
+    mosque(g, 1620, base - 6, 0.72, col, { R: 30, minarets: [[-58, 150], [58, 150]] });
+
+    // 12. Süleymaniye (tepede, dört minare)
+    g.fillRect(1720, base - 30, 250, 30);
+    mosque(g, 1845, base - 26, 1.3, col, { R: 34, minarets: [[-96, 138], [-70, 160], [70, 160], [96, 138]] });
+
+    // 15. Sirkeci Tren Garı: oryantalist cephe, at nalı kemerler, gül pencere, sivri çatılı kuleler
+    { const x0 = 2020, x1 = 2200;
+      g.fillRect(x0, base - 46, x1 - x0, 46);
+      g.fillRect(2085, base - 78, 50, 78);
+      g.beginPath(); g.moveTo(2080, base - 78); g.lineTo(2110, base - 96); g.lineTo(2140, base - 78); g.fill();
+      [x0 - 2, x1 - 14].forEach(x => { g.fillRect(x, base - 82, 16, 82); g.beginPath(); g.moveTo(x - 2, base - 82); g.lineTo(x + 8, base - 104); g.lineTo(x + 18, base - 82); g.fill(); });
+      W_(() => { g.beginPath(); g.arc(2110, base - 60, 10, 0, 7); g.fill();
+                 g.beginPath(); g.ellipse(2110, base - 28, 9, 12, 0, Math.PI, 0); g.fill(); g.fillRect(2101, base - 28, 18, 14);
+                 for (let x = x0 + 22; x < x1 - 20; x += 14) { if (x > 2080 && x < 2136) continue; g.beginPath(); g.ellipse(x + 3, base - 32, 4, 5, 0, Math.PI, 0); g.fill(); g.fillRect(x - 1, base - 32, 8, 10); } }); }
+
+    // 20. Eyüp Sultan Camii (servi ağaçları arasında)
+    { const cyp = x => { g.beginPath(); g.ellipse(x, base - 34, 6, 30, 0, 0, 7); g.fill(); };
+      [2250, 2268, 2440, 2458].forEach(cyp);
+      mosque(g, 2355, base, 0.92, col, { R: 28, minarets: [[-62, 140], [62, 140]] }); }
+
+    // 21. Rumeli Hisarı
+    { g.beginPath(); g.moveTo(2500, base); g.lineTo(2500, base - 24); g.lineTo(2590, base - 60); g.lineTo(2680, base - 40); g.lineTo(2740, base - 70); g.lineTo(2740, base); g.fill();
+      [[2510, 64, 26], [2590, 96, 34], [2730, 104, 30]].forEach(([x, h, w]) => {
+        g.fillRect(x - w / 2, base - h, w, h);
+        g.beginPath(); g.moveTo(x - w / 2 - 3, base - h); g.lineTo(x, base - h - w * 1.1); g.lineTo(x + w / 2 + 3, base - h); g.fill();
+        for (let k = -w / 2 + 2; k < w / 2 - 2; k += 7) g.fillRect(x + k, base - h + 6, 4, 5);
+      }); }
+
+    // 24. Kız Kulesi (kayalık adacık)
+    { const x = 2820, y = base;
+      g.beginPath(); g.ellipse(x, y, 48, 9, 0, Math.PI, 0); g.fill();
+      g.fillRect(x - 32, y - 20, 64, 13); g.fillRect(x - 9, y - 62, 18, 44); g.fillRect(x - 12, y - 62, 24, 4);
+      g.fillRect(x - 6, y - 74, 12, 12);
+      g.beginPath(); g.moveTo(x - 7, y - 74); g.lineTo(x, y - 94); g.lineTo(x + 7, y - 74); g.fill();
+      g.fillStyle = "#E23B3B"; g.fillRect(x, y - 104, 1.5, 10); g.fillRect(x + 1.5, y - 104, 7, 5); g.fillStyle = col;
+      W_(() => { g.fillRect(x - 3, y - 70, 6, 5); g.fillRect(x - 3, y - 50, 2, 5); g.fillRect(x + 2, y - 50, 2, 5); }); }
+
+    // 25. Beylerbeyi Sarayı
+    { const x0 = 2900, x1 = 3120;
+      g.fillRect(x0, base - 48, x1 - x0, 48); g.fillRect(x0 - 5, base - 52, x1 - x0 + 10, 5);
+      g.fillRect(2970, base - 66, 80, 18); g.fillRect(2966, base - 69, 88, 4);
+      [x0 + 4, x1 - 34].forEach(x => { g.fillRect(x, base - 64, 30, 16); g.fillRect(x - 3, base - 66, 36, 3); });
+      W_(() => { for (let x = x0 + 8; x < x1 - 6; x += 12) [base - 42, base - 24].forEach(y => g.fillRect(x, y, 6, 11)); for (let x = 2976; x < 3046; x += 11) g.fillRect(x, base - 62, 5, 10); }); }
+
+    // 26. Haydarpaşa Tren Garı
+    { g.fillRect(3170, base - 70, 150, 70);
+      [3166, 3300].forEach(x => { g.fillRect(x, base - 98, 24, 98); g.beginPath(); g.moveTo(x - 2, base - 98); g.lineTo(x + 12, base - 128); g.lineTo(x + 26, base - 98); g.fill(); });
+      g.beginPath(); g.moveTo(3190, base - 70); g.lineTo(3245, base - 94); g.lineTo(3300, base - 70); g.fill();
+      W_(() => { for (let x = 3196; x < 3296; x += 12) [base - 60, base - 40, base - 22].forEach(y => g.fillRect(x, y, 6, 9)); g.fillRect(3172, base - 88, 5, 10); g.fillRect(3306, base - 88, 5, 10); }); }
+
+    // 29. Bebek Sahili: yalılar, ağaçlar, küçük Bebek Camii, sahil yolu
+    { g.fillRect(3360, base - 6, 230, 6);
+      for (let i = 0; i < 3; i++) {
+        const x = 3366 + i * 40, h = 32 + (i % 2) * 10;
+        g.fillRect(x, base - h, 32, h);
+        g.beginPath(); g.moveTo(x - 4, base - h); g.lineTo(x + 16, base - h - 13); g.lineTo(x + 36, base - h); g.fill();
+        W_(() => { g.fillRect(x + 5, base - h + 8, 6, 8); g.fillRect(x + 20, base - h + 8, 6, 8); g.fillRect(x + 5, base - h + 22, 6, 8); g.fillRect(x + 20, base - h + 22, 6, 8); });
+      }
+      [3492, 3510].forEach(x => { g.beginPath(); g.arc(x, base - 30, 12, 0, 7); g.fill(); g.fillRect(x - 2, base - 20, 4, 20); });
+      mosque(g, 3556, base, 0.5, col, { R: 30, minarets: [[62, 170]] }); }
   });
 
   // Su yüzeyi
@@ -1030,7 +1053,6 @@ const Drone = (function () {
     tiled(farL, 0.15);
     tiled(midL, 0.35);
     drawWater();
-    const k = W + 300 - ((frame * 0.8) % (W + 700)); drawKizKulesi(k);
     const f = W + 200 - ((frame * 1.1 + 500) % (W + 600)); drawFerry(f);
     ctx.fillStyle = "#2B3F63"; ctx.fillRect(0, QUAY, W, 28);
     ctx.fillStyle = "#C9CED8"; ctx.fillRect(0, QUAY, W, 4);
