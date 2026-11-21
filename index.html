@@ -172,6 +172,33 @@
   .stat small { display: block; color: #A9B2D6; font-size: .85rem; }
   .stat strong { font-family: var(--display); font-size: 2.2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .howto { color: #A9B2D6; font-size: .93rem; margin: .25rem 0 0; }
+  /* Skor tablosu */
+  .lb { background: rgba(255,255,255,.06); border-radius: 16px; padding: 1rem 1.1rem 1.1rem; }
+  .lb-top { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; margin-bottom: .6rem; }
+  .lb-top small { color: #A9B2D6; font-size: .85rem; }
+  .lb-player { font: 600 .82rem var(--body); color: var(--sun); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: .2em; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: rank; }
+  .lb-list li { display: grid; grid-template-columns: 1.6rem minmax(0,1fr) auto; align-items: center; gap: .5rem; padding: .38rem .5rem; border-radius: 8px; font-size: .95rem; counter-increment: rank; }
+  .lb-list li::before { content: counter(rank); color: #7F89B5; font-variant-numeric: tabular-nums; font-size: .85rem; }
+  .lb-list li:nth-child(1)::before { content: "🥇"; } .lb-list li:nth-child(2)::before { content: "🥈"; } .lb-list li:nth-child(3)::before { content: "🥉"; }
+  .lb-list li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-list li b { font-family: var(--display); font-variant-numeric: tabular-nums; }
+  .lb-list li.me { background: rgba(255,210,63,.14); color: #fff; }
+  .lb-list li.note { display: block; color: #A9B2D6; font-size: .9rem; padding: .3rem 0; }
+  .lb-list li.note::before { content: none; }
+  /* Kullanıcı adı penceresi */
+  dialog#name-dialog { border: 0; border-radius: 22px; padding: 0; width: min(26rem, calc(100% - 2rem)); background: #fff; color: var(--ink); box-shadow: 0 30px 80px rgba(10,16,60,.45); }
+  dialog#name-dialog::backdrop { background: rgba(14,22,48,.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .nd { padding: 1.6rem 1.5rem 1.4rem; display: grid; gap: .9rem; }
+  .nd h3 { font-family: var(--display); font-size: 1.6rem; letter-spacing: -0.02em; margin: 0; line-height: 1.1; }
+  .nd p { margin: 0; color: var(--muted); font-size: .97rem; }
+  .nd input { font: 500 1.1rem var(--body); padding: .8rem 1rem; border-radius: 12px; border: 1.5px solid var(--line); width: 100%; color: var(--ink); }
+  .nd input:focus { outline: none; border-color: var(--cobalt); box-shadow: 0 0 0 4px rgba(36,51,201,.15); }
+  .nd .err { color: #C42B4B; font-size: .88rem; min-height: 1.2em; margin: -.3rem 0 0; }
+  .nd .row { display: flex; gap: .5rem; justify-content: flex-end; flex-wrap: wrap; }
+  .nd .btn-sun { background: var(--cobalt); color: #fff; }
+  .nd .btn-sun:hover { background: var(--cobalt-deep); }
+  .nd .btn-plain { background: none; color: var(--muted); }
   .howto kbd { font: 600 .8rem var(--body); background: rgba(255,255,255,.12); color: #fff; padding: .1rem .4rem; border-radius: 5px; }
 
   /* Drone */
@@ -210,7 +237,7 @@
     .areas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .stage, .stage-2048 { grid-template-columns: 1fr; }
     .side { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .side .howto, .side .btn, .side .ladder-wrap { grid-column: 1 / -1; }
+    .side .howto, .side .btn, .side .ladder-wrap, .side .lb { grid-column: 1 / -1; }
   }
   @media (max-width: 520px) {
     .areas { grid-template-columns: 1fr; }
@@ -343,6 +370,10 @@
           <div class="stat"><small lang="tr">En iyi</small><small lang="en">Best</small><strong id="d-best">0</strong></div>
           <p class="howto" lang="tr"><kbd>Boşluk</kbd>, tıklama ya da dokunma ile itiş ver. Batarya biterse drone düşer, sarı bataryaları topla.</p>
           <p class="howto" lang="en"><kbd>Space</kbd>, click or tap to thrust. If the battery runs out the drone falls, so grab the yellow cells.</p>
+          <div class="lb">
+            <div class="lb-top"><small><span lang="tr">Skor tablosu</span><span lang="en">Leaderboard</span></small><button class="lb-player" type="button" data-player></button></div>
+            <ol class="lb-list" id="lb-drone"></ol>
+          </div>
         </div>
       </div>
 
@@ -356,6 +387,10 @@
           <div class="stat"><small lang="tr">En iyi</small><small lang="en">Best</small><strong id="g-best">0</strong></div>
           <p class="howto" lang="tr"><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> ya da kaydırarak aynı aşamaları birleştir. Hedef: Unicorn.</p>
           <p class="howto" lang="en"><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or swipe to merge matching stages. Goal: Unicorn.</p>
+          <div class="lb">
+            <div class="lb-top"><small><span lang="tr">Skor tablosu</span><span lang="en">Leaderboard</span></small><button class="lb-player" type="button" data-player></button></div>
+            <ol class="lb-list" id="lb-g2048"></ol>
+          </div>
           <div class="ladder-wrap"><div class="ladder" id="ladder"></div></div>
           <button class="btn btn-ghost" id="g-new" type="button"><span lang="tr">Yeni oyun</span><span lang="en">New game</span></button>
         </div>
@@ -373,6 +408,20 @@
   </section>
 </main>
 
+<dialog id="name-dialog" aria-labelledby="nd-title">
+  <form method="dialog" class="nd" id="name-form" novalidate>
+    <h3 id="nd-title"><span lang="tr">Kullanıcı adın ne?</span><span lang="en">What's your player name?</span></h3>
+    <p lang="tr">Skorların bu adla ortak skor tablosuna yazılacak. Ad bu cihazda hatırlanır.</p>
+    <p lang="en">Your scores go on the shared leaderboard under this name. It's remembered on this device.</p>
+    <input id="nd-input" name="player" maxlength="16" autocomplete="nickname" autocapitalize="words" spellcheck="false" placeholder="örn. Abdullah">
+    <p class="err" id="nd-err" aria-live="polite"></p>
+    <div class="row">
+      <button class="btn btn-plain" type="button" id="nd-skip"><span lang="tr">Şimdilik geç</span><span lang="en">Skip for now</span></button>
+      <button class="btn btn-sun" type="submit"><span lang="tr">Kaydet ve oyna</span><span lang="en">Save and play</span></button>
+    </div>
+  </form>
+</dialog>
+
 <footer class="wrap">
   <span>© <span id="year">2026</span> Abdullah Özkul</span>
   <a href="#top"><span lang="tr">Başa dön</span><span lang="en">Back to top</span></a>
@@ -387,6 +436,9 @@ const CONTACT = {
   youtube:  "",   // örn. "https://www.youtube.com/@kanaladi"
   instagram:""
 };
+
+// Skor tablosu API adresi (Google Apps Script web uygulaması). Boşsa skor tablosu kapalı.
+const SCORE_API = "";
 
 /* ================= Yardımcılar ================= */
 const $ = s => document.querySelector(s);
@@ -403,7 +455,7 @@ function setLang(l) {
   document.documentElement.lang = l;
   document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.setLang === l)));
   store.set("lang", l);
-  try { G2048.render(); renderLadder(); } catch (e) {}
+  try { G2048.render(); renderLadder(); Player.paint(); Leaderboard.refreshAll(); } catch (e) {}
 }
 document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => setLang(b.dataset.setLang)));
 
@@ -514,6 +566,95 @@ tabs.forEach(tab => tab.addEventListener("click", () => {
   if (tab.id === "tab-2048") { Drone.pause(); $("#g2048").focus({ preventScroll: true }); }
 }));
 
+/* ================= Oyuncu adı ================= */
+const Player = (function () {
+  const dlg = $("#name-dialog"), form = $("#name-form"), input = $("#nd-input"), err = $("#nd-err");
+  let name = store.get("playerName", ""), skipped = false, pending = null;
+  function clean(v) { return String(v || "").replace(/[<>"'`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 16); }
+  function paint() {
+    document.querySelectorAll("[data-player]").forEach(b => {
+      b.textContent = name ? name : (LANG === "tr" ? "Ad seç" : "Pick a name");
+      b.title = LANG === "tr" ? "Kullanıcı adını değiştir" : "Change player name";
+    });
+  }
+  function ask(then) {
+    pending = then || null; err.textContent = ""; input.value = name;
+    if (typeof dlg.showModal === "function") { dlg.showModal(); setTimeout(() => input.focus(), 30); }
+    else { const v = clean(prompt(LANG === "tr" ? "Kullanıcı adın:" : "Player name:", name)); if (v.length >= 2) save(v); else { skipped = true; done(); } }
+  }
+  function save(v) { name = v; store.set("playerName", name); paint(); Leaderboard.refreshAll(); done(); }
+  function done() { const f = pending; pending = null; if (dlg.open) dlg.close(); if (f) setTimeout(f, 30); }
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const v = clean(input.value);
+    if (v.length < 2) { err.textContent = LANG === "tr" ? "En az 2 karakter yaz." : "Use at least 2 characters."; input.focus(); return; }
+    save(v);
+  });
+  $("#nd-skip").addEventListener("click", () => { skipped = true; done(); });
+  dlg.addEventListener("cancel", () => { skipped = true; pending = null; });
+  document.querySelectorAll("[data-player]").forEach(b => b.addEventListener("click", () => ask()));
+  return {
+    get name() { return name; },
+    ready() { return !!name || skipped || !SCORE_API; },
+    ensure(then) { if (this.ready()) then(); else ask(then); },
+    paint
+  };
+})();
+
+/* ================= Skor tablosu ================= */
+const Leaderboard = (function () {
+  const deviceId = store.get("deviceId", null) || (() => { const id = Math.random().toString(36).slice(2, 10); store.set("deviceId", id); return id; })();
+  const data = {}, status = {};
+  const txt = {
+    off:   ["Skor tablosu yakında açılıyor.", "Leaderboard coming soon."],
+    load:  ["Yükleniyor…", "Loading…"],
+    err:   ["Skor tablosuna şu an ulaşılamıyor.", "Leaderboard is unavailable right now."],
+    empty: ["Henüz skor yok. İlk sen ol!", "No scores yet. Be the first!"]
+  };
+  const t = k => txt[k][LANG === "tr" ? 0 : 1];
+  function render(game) {
+    const ol = $("#lb-" + game); if (!ol) return;
+    ol.textContent = "";
+    const note = k => { const li = document.createElement("li"); li.className = "note"; li.textContent = t(k); ol.appendChild(li); };
+    if (!SCORE_API) return note("off");
+    if (status[game] === "load" && !data[game]) return note("load");
+    if (status[game] === "err" && !data[game]) return note("err");
+    const list = data[game] || [];
+    if (!list.length) return note("empty");
+    const me = (Player.name || "").toLocaleLowerCase("tr");
+    list.forEach(row => {
+      const li = document.createElement("li");
+      if (me && row.name.toLocaleLowerCase("tr") === me) li.className = "me";
+      const n = document.createElement("span"); n.textContent = row.name;
+      const b = document.createElement("b"); b.textContent = row.score;
+      li.append(n, b); ol.appendChild(li);
+    });
+  }
+  async function call(params, opts) {
+    const url = SCORE_API + "?" + new URLSearchParams(params).toString();
+    const r = await fetch(url, Object.assign({ redirect: "follow" }, opts || {}));
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "error");
+    return j;
+  }
+  async function load(game) {
+    if (!SCORE_API) return render(game);
+    status[game] = "load"; render(game);
+    try { const j = await call({ action: "top", game }); data[game] = j.top; status[game] = "ok"; }
+    catch (e) { status[game] = "err"; }
+    render(game);
+  }
+  async function submit(game, score) {
+    if (!SCORE_API || !Player.name || !(score > 0)) return;
+    try {
+      const j = await call({ action: "submit", game, name: Player.name, score, device: deviceId }, { keepalive: true });
+      data[game] = j.top; status[game] = "ok"; render(game);
+    } catch (e) { /* sessizce geç */ }
+  }
+  function refreshAll() { ["drone", "g2048"].forEach(render); }
+  return { load, submit, refreshAll, render };
+})();
+
 /* ================= Oyun 1: Drone Rotası ================= */
 const Drone = (function () {
   const cv = $("#drone"), ctx = cv.getContext("2d");
@@ -569,6 +710,7 @@ const Drone = (function () {
     $("#drone-msg").innerHTML = (tr ? `Skor: <b>${score}</b>. En iyi: <b>${best}</b>` : `Score: <b>${score}</b>. Best: <b>${best}</b>`);
     $("#drone-start").innerHTML = tr ? "Tekrar uç" : "Fly again";
     overlay.hidden = false;
+    Leaderboard.submit("drone", score);
   }
   function drawSky() {
     const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -646,6 +788,7 @@ const Drone = (function () {
     raf = requestAnimationFrame(loop);
   }
   function start() {
+    if (!Player.ready()) return Player.ensure(start);
     reset(); state = "play"; overlay.hidden = true; cv.focus({ preventScroll: true });
     lastTs = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
     thrust();
@@ -685,7 +828,8 @@ function renderLadder() {
 
 const G2048 = (function () {
   const N = 4, gridEl = $("#grid"), board = $("#g2048");
-  let cells, score, best = store.get("g2048Best", 0), won = false, idc = 0, tileLayer, msgEl;
+  let cells, score, best = store.get("g2048Best", 0), won = false, idc = 0, tileLayer, msgEl, submitted = false;
+  function submitOnce() { if (!submitted && score > 0) { submitted = true; Leaderboard.submit("g2048", score); } }
   $("#g-best").textContent = best;
   for (let i = 0; i < N * N; i++) gridEl.insertAdjacentHTML("beforeend", '<div class="cell"></div>');
   tileLayer = document.createElement("div"); tileLayer.className = "tiles"; gridEl.appendChild(tileLayer);
@@ -698,10 +842,11 @@ const G2048 = (function () {
   }
   function newGame() {
     cells = Array.from({ length: N }, () => Array(N).fill(null));
-    score = 0; won = false; add(); add(); render(); hideMsg();
+    score = 0; won = false; submitted = false; add(); add(); render(); hideMsg();
   }
   function move(dir) { // 0 sol, 1 yukarı, 2 sağ, 3 aşağı
     if (msgEl && !msgEl.dataset.cont) return;
+    if (!Player.ready()) return Player.ensure(() => board.focus({ preventScroll: true }));
     let moved = false;
     cells.forEach(row => row.forEach(t => { if (t) { t.isNew = false; t.merged = false; } }));
     for (let k = 0; k < N; k++) {
@@ -728,7 +873,7 @@ const G2048 = (function () {
     if (moved) {
       add(); render();
       if (score > best) { best = score; store.set("g2048Best", best); $("#g-best").textContent = best; }
-      if (!canMove()) setTimeout(() => showMsg(false), 250);
+      if (!canMove()) { submitOnce(); setTimeout(() => showMsg(false), 250); }
     }
   }
   function coord(dir, k, m) {
@@ -774,9 +919,9 @@ const G2048 = (function () {
     msgEl = document.createElement("div"); msgEl.className = "overlay";
     if (win) msgEl.dataset.cont = "1";
     msgEl.innerHTML = `<div><h3>${win ? (tr ? "Unicorn oldun 🦄" : "You're a unicorn 🦄") : (tr ? "Nakit bitti 💸" : "Out of runway 💸")}</h3>
-      <p>${tr ? "Skor" : "Score"}: <b>${score}</b></p>
+      <p>${tr ? "Skor" : "Score"}: <b>${score}</b>${!win && Player.name && SCORE_API ? (tr ? " · skor tablosuna yazıldı" : " · saved to leaderboard") : ""}</p>
       <button class="btn btn-sun" type="button">${win ? (tr ? "Devam et" : "Keep going") : (tr ? "Yeniden kur" : "Start over")}</button></div>`;
-    msgEl.querySelector("button").addEventListener("click", () => { win ? hideMsg() : newGame(); board.focus({ preventScroll: true }); });
+    msgEl.querySelector("button").addEventListener("click", () => { win ? hideMsg() : (submitOnce(), newGame()); board.focus({ preventScroll: true }); });
     board.appendChild(msgEl);
   }
   function hideMsg() { if (msgEl) { msgEl.remove(); msgEl = null; } }
@@ -793,15 +938,18 @@ const G2048 = (function () {
     if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
     move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 2 : 0) : (dy > 0 ? 3 : 1));
   });
-  $("#g-new").addEventListener("click", () => { newGame(); board.focus({ preventScroll: true }); });
+  $("#g-new").addEventListener("click", () => { submitOnce(); newGame(); board.focus({ preventScroll: true }); });
+  addEventListener("pagehide", submitOnce);
   new ResizeObserver(() => render()).observe(gridEl);
   newGame();
-  return { render };
+  return { render, submitOnce };
 })();
 
 /* ================= Başlat ================= */
 setLang(store.get("lang", null) || ((navigator.language || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 $("#year").textContent = new Date().getFullYear();
+Player.paint();
+Leaderboard.load("drone"); Leaderboard.load("g2048");
 </script>
 </body>
 </html>
