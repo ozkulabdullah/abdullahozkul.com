@@ -163,8 +163,6 @@
   .btn-sun:hover { background: #FFDD66; }
   .btn-ghost { background: rgba(255,255,255,.1); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
   .btn-ghost:hover { background: rgba(255,255,255,.18); }
-  .hint { position: absolute; right: 1.25rem; bottom: 1rem; font-size: .8rem; color: rgba(255,255,255,.55); }
-  @media (hover: none) { .hint { display: none; } }
 
   /* ---------- Sections ---------- */
   section.s { padding-block: clamp(4.5rem, 10vw, 8rem); }
@@ -210,6 +208,7 @@
     padding: .65rem 1.1rem; border-radius: 999px; display: inline-flex; align-items: center; gap: .5rem;
   }
   .tabs button[aria-selected="true"] { background: #fff; color: var(--ink); }
+  .tabs .ti { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .stage { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; gap: 1.5rem; align-items: start; }
   .board-frame {
     position: relative; border-radius: 22px; overflow: hidden;
@@ -263,26 +262,48 @@
   .overlay p { margin: 0 0 1.2rem; color: #C5CCEB; }
 
   /* 2048 */
-  .g2048 { padding: clamp(10px, 2vw, 16px); aspect-ratio: 1 / 1; width: 100%; max-width: 34rem; margin-inline: auto; }
-  .side .btn { justify-content: center; }
+  .g2048 {
+    padding: clamp(10px, 2vw, 16px); aspect-ratio: 1 / 1; width: 100%; max-width: 34rem; margin-inline: auto;
+    background: linear-gradient(160deg, #22307A 0%, #141C4E 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px rgba(255,255,255,.06), 0 24px 60px rgba(5,10,40,.45);
+    border-radius: 26px;
+  }
   .grid { position: relative; width: 100%; height: 100%; display: grid; grid-template: repeat(4, 1fr) / repeat(4, 1fr); gap: clamp(6px, 1.4vw, 12px); }
-  .cell { background: rgba(255,255,255,.06); border-radius: 12px; }
+  .cell { background: rgba(255,255,255,.05); border-radius: 14px; box-shadow: inset 0 3px 0 rgba(0,0,0,.22), inset 0 -1px 0 rgba(255,255,255,.04); }
   .tiles { position: absolute; inset: 0; }
   .tile {
-    position: absolute; display: grid; place-items: center; text-align: center;
-    border-radius: 12px; padding: 4px;
+    position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25em;
+    border-radius: 14px; padding: 6px; text-align: center; color: var(--fg);
+    background: linear-gradient(165deg, var(--b1) 0%, var(--b2) 100%);
+    box-shadow: 0 5px 0 var(--edge), 0 10px 18px rgba(5,10,40,.35), inset 0 1px 0 rgba(255,255,255,.45);
     font-family: var(--display); font-weight: 700; line-height: 1.05; letter-spacing: -0.01em;
-    transition: transform .12s ease-in-out;
+    transition: transform .12s ease-in-out; overflow: hidden;
   }
-  .tile small { display: block; font-family: var(--body); font-weight: 600; font-size: .62em; opacity: .7; margin-top: .2em; }
-  .tile.new { animation: pop .18s ease-out; }
-  .tile.merged { animation: bump .18s ease-out; }
-  @keyframes pop { from { transform: var(--pos) scale(.3); } to { transform: var(--pos) scale(1); } }
-  @keyframes bump { 50% { transform: var(--pos) scale(1.12); } }
-  @media (prefers-reduced-motion: reduce) { .tile, .tile.new, .tile.merged { transition: none; animation: none; } }
+  .tile .ic { width: 38%; aspect-ratio: 1; display: block; }
+  .tile .ic svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .tile .nm { display: block; max-width: 100%; }
+  .tile em { position: absolute; top: 6%; right: 8%; font: 700 .62em var(--body); font-style: normal; opacity: .55; }
+  .tile.top::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 45%, transparent 60%);
+    background-size: 250% 100%; animation: shine 2.4s ease-in-out infinite;
+  }
+  @keyframes shine { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+  .tile.new { animation: pop .2s ease-out; }
+  .tile.merged { animation: bump .2s ease-out; }
+  @keyframes pop { from { transform: var(--pos) scale(.3); opacity: .4; } to { transform: var(--pos) scale(1); opacity: 1; } }
+  @keyframes bump { 50% { transform: var(--pos) scale(1.13); } }
+  @media (prefers-reduced-motion: reduce) { .tile, .tile.new, .tile.merged { transition: none; animation: none; } .tile.top::after { animation: none; } }
+  .stat { position: relative; }
+  .pop { position: absolute; right: 1rem; top: .6rem; font: 700 1.1rem var(--display); color: var(--sun); pointer-events: none; animation: rise .8s ease-out forwards; }
+  @keyframes rise { from { transform: translateY(8px); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(-26px); opacity: 0; } }
   .stage-2048 { grid-template-columns: minmax(0, 1fr) 17rem; }
-  .ladder { display: flex; flex-wrap: wrap; gap: 4px; margin-top: .4rem; }
-  .ladder i { font-style: normal; font-size: .75rem; padding: .15rem .45rem; border-radius: 6px; background: rgba(255,255,255,.08); color: #C5CCEB; }
+  .ladder { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr)); gap: 4px; margin-top: .5rem; }
+  .ladder i { font-style: normal; font-size: .78rem; display: flex; align-items: center; gap: .4rem; padding: .3rem .5rem; border-radius: 8px; background: rgba(255,255,255,.05); color: #7F89B5; }
+  .ladder i b { width: 9px; height: 9px; border-radius: 3px; flex: none; background: var(--b2); opacity: .35; }
+  .ladder i.on { color: #fff; background: rgba(255,255,255,.1); }
+  .ladder i.on b { opacity: 1; }
+  .ladder-title { color: #A9B2D6; font-size: .85rem; }
 
   @media (max-width: 900px) {
     .about { grid-template-columns: 1fr; }
@@ -338,7 +359,6 @@
       </div>
     </div>
   </div>
-  <span class="hint" aria-hidden="true"><span lang="tr">İmleci gezdir, arazi şekillensin</span><span lang="en">Move your cursor to shape the terrain</span></span>
 </header>
 
 <main>
@@ -400,8 +420,8 @@
       <div class="s-head">
         <h2 id="h-games"><span lang="tr">Biraz mola</span><span lang="en">Take a break</span></h2>
         <div class="tabs" role="tablist" aria-label="Oyunlar">
-          <button role="tab" id="tab-drone" aria-controls="panel-drone" aria-selected="true">🚁 <span lang="tr">Drone Rotası</span><span lang="en">Drone Route</span></button>
-          <button role="tab" id="tab-2048" aria-controls="panel-2048" aria-selected="false">🦄 <span lang="tr">Girişim 2048</span><span lang="en">Startup 2048</span></button>
+          <button role="tab" id="tab-drone" aria-controls="panel-drone" aria-selected="true"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h13.5c2 0 3.5.6 3.5 1.2S18.5 14.5 16.5 14.5H6"/><path d="M9 12.2l2.5-6M9.5 14.2l3 5M3.5 12l-1.5-3M3.5 14l-1.5 3"/></svg><span lang="tr">Drone Rotası</span><span lang="en">Drone Route</span></button>
+          <button role="tab" id="tab-2048" aria-controls="panel-2048" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg><span lang="tr">Girişim 2048</span><span lang="en">Startup 2048</span></button>
         </div>
       </div>
 
@@ -437,8 +457,8 @@
         <div class="side">
           <div class="stat"><small lang="tr">Skor</small><small lang="en">Score</small><strong id="g-score">0</strong></div>
           <div class="stat"><small lang="tr">En iyi</small><small lang="en">Best</small><strong id="g-best">0</strong></div>
-          <p class="howto" lang="tr"><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> ya da kaydırarak aynı aşamaları birleştir. Hedef: Unicorn.</p>
-          <p class="howto" lang="en"><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or swipe to merge matching stages. Goal: Unicorn.</p>
+          <p class="howto" lang="tr"><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> ya da kaydırarak aynı aşamaları birleştir. Hedef: Halka arz.</p>
+          <p class="howto" lang="en"><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or swipe to merge matching stages. Goal: IPO.</p>
           <div class="lb">
             <div class="lb-top"><small><span lang="tr">Skor tablosu</span><span lang="en">Leaderboard</span></small><button class="lb-player" type="button" data-player></button></div>
             <ol class="lb-list" id="lb-g2048"></ol>
@@ -1221,16 +1241,42 @@ const STAGES = {
   256:  ["Seri A", "Series A"],
   512:  ["Seri B", "Series B"],
   1024: ["Global", "Global"],
-  2048: ["Unicorn 🦄", "Unicorn 🦄"]
+  2048: ["Halka arz", "IPO"]
 };
+// [açık ton, koyu ton, alt kenar, yazı rengi]
 const TILE_COLORS = {
-  2: ["#E8EBFF", "#0E1630"], 4: ["#C9D1FF", "#0E1630"], 8: ["#A3AFFF", "#0E1630"], 16: ["#7C8BFF", "#fff"],
-  32: ["#5566F2", "#fff"], 64: ["#3445E8", "#fff"], 128: ["#2433C9", "#fff"], 256: ["#FFE48A", "#0E1630"],
-  512: ["#FFD23F", "#0E1630"], 1024: ["#FFB020", "#0E1630"], 2048: ["#FF6B9A", "#fff"]
+  2:    ["#F6F8FF", "#DEE4FF", "#A9B4EE", "#0E1630"],
+  4:    ["#DFE5FF", "#C4CEFF", "#8C9AE8", "#0E1630"],
+  8:    ["#BCC7FF", "#9DACFF", "#6B7CE2", "#0E1630"],
+  16:   ["#93A1FF", "#7585FA", "#4C5CD3", "#FFFFFF"],
+  32:   ["#7080FB", "#5767F1", "#3746C2", "#FFFFFF"],
+  64:   ["#4F61F2", "#3445E8", "#2130B2", "#FFFFFF"],
+  128:  ["#3FD29B", "#1FAE7A", "#13805A", "#FFFFFF"],
+  256:  ["#FFEFB0", "#FFDC66", "#D6A61C", "#0E1630"],
+  512:  ["#FFD95A", "#FFB800", "#C68600", "#0E1630"],
+  1024: ["#FFA866", "#FF7A33", "#C4521A", "#FFFFFF"],
+  2048: ["#FFE88A", "#F2B000", "#A87500", "#0E1630"]
+};
+const STAGE_ICONS = {
+  2:    '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/>',
+  4:    '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.1c3 .3 5.5 2.6 5.5 5.9"/>',
+  8:    '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  16:   '<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>',
+  32:   '<circle cx="10" cy="8" r="4"/><path d="M2 21c0-4 3.6-7 8-7 1.3 0 2.5.3 3.6.7"/><path d="M15.5 18.5l2 2 4-4"/>',
+  64:   '<path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><path d="M9 15l2 2 4-4"/>',
+  128:  '<path d="M12 21v-9"/><path d="M12 12C12 7 8 5 4 5c0 4 3 7 8 7z"/><path d="M12 14c0-4 3-6 8-6 0 4-3 6-8 6z"/>',
+  256:  '<path d="M4 20h16"/><path d="M7 20v-6M12 20v-12M17 20v-9"/>',
+  512:  '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  1024: '<circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17"/><path d="M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/>',
+  2048: '<path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5a2.5 3 0 0 0 3 4.2M17 6h2.5a2.5 3 0 0 1-3 4.2"/>'
 };
 function stageName(v) { const s = STAGES[v]; return s ? s[LANG === "tr" ? 0 : 1] : String(v); }
+let topStage = 2;
 function renderLadder() {
-  $("#ladder").innerHTML = Object.keys(STAGES).map(k => `<i>${stageName(+k)}</i>`).join("");
+  $("#ladder").innerHTML = Object.keys(STAGES).map(k => {
+    const c = TILE_COLORS[k];
+    return `<i class="${+k <= topStage ? "on" : ""}" style="--b2:${c[1]}"><b></b>${stageName(+k)}</i>`;
+  }).join("");
 }
 
 const G2048 = (function () {
@@ -1255,7 +1301,7 @@ const G2048 = (function () {
   function move(dir) { // 0 sol, 1 yukarı, 2 sağ, 3 aşağı
     if (msgEl && !msgEl.dataset.cont) return;
     if (!Player.ready()) return Player.ensure(() => board.focus({ preventScroll: true }));
-    let moved = false;
+    let moved = false; const before = score;
     cells.forEach(row => row.forEach(t => { if (t) { t.isNew = false; t.merged = false; } }));
     for (let k = 0; k < N; k++) {
       const line = [];
@@ -1280,6 +1326,10 @@ const G2048 = (function () {
     }
     if (moved) {
       add(); render();
+      if (score > before && !reduceMotion) {
+        const pop = document.createElement("span"); pop.className = "pop"; pop.textContent = "+" + (score - before);
+        $("#g-score").parentElement.appendChild(pop); setTimeout(() => pop.remove(), 800);
+      }
       if (score > best) { best = score; $("#g-best").textContent = best; }
       if (!canMove()) { submitOnce(); setTimeout(() => showMsg(false), 250); }
     }
@@ -1303,22 +1353,26 @@ const G2048 = (function () {
     $("#g-score").textContent = score;
     const size = gridEl.clientWidth, gap = parseFloat(getComputedStyle(gridEl).gap) || 10;
     const cs = (size - gap * (N - 1)) / N;
-    const seen = new Set();
+    const seen = new Set(); let maxTile = 2;
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
       const t = cells[r][c]; if (!t) continue;
       seen.add(String(t.id));
       let el = tileLayer.querySelector(`[data-id="${t.id}"]`);
       if (!el) { el = document.createElement("div"); el.className = "tile"; el.dataset.id = t.id; tileLayer.appendChild(el); }
-      const [bg, fg] = TILE_COLORS[t.v] || ["#0E1630", "#fff"];
+      const [b1, b2, edge, fg] = TILE_COLORS[t.v] || ["#2A3570", "#1C2556", "#0E1630", "#FFFFFF"];
       const name = stageName(t.v);
       el.style.width = el.style.height = cs + "px";
-      el.style.background = bg; el.style.color = fg;
-      el.style.fontSize = Math.max(11, cs * (name.length > 9 ? 0.15 : name.length > 6 ? 0.18 : 0.24)) + "px";
+      el.style.setProperty("--b1", b1); el.style.setProperty("--b2", b2); el.style.setProperty("--edge", edge); el.style.setProperty("--fg", fg);
+      el.style.fontSize = Math.max(10, cs * (name.length > 10 ? 0.12 : name.length > 7 ? 0.14 : 0.17)) + "px";
       const pos = `translate(${c * (cs + gap)}px, ${r * (cs + gap)}px)`;
       el.style.setProperty("--pos", pos); el.style.transform = pos;
-      el.innerHTML = `<span>${name}<small>${t.v}</small></span>`;
+      const html = `<span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${STAGE_ICONS[t.v] || ""}</svg></span><span class="nm">${name}</span><em>${t.v}</em>`;
+      if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
       el.classList.toggle("new", !!t.isNew); el.classList.toggle("merged", !!t.merged);
+      el.classList.toggle("top", t.v >= 2048);
+      if (t.v > maxTile) maxTile = t.v;
     }
+    if (maxTile !== topStage) { topStage = maxTile; renderLadder(); }
     tileLayer.querySelectorAll(".tile").forEach(el => { if (!seen.has(el.dataset.id)) el.remove(); });
   }
   function showMsg(win) {
@@ -1326,7 +1380,7 @@ const G2048 = (function () {
     const tr = LANG === "tr";
     msgEl = document.createElement("div"); msgEl.className = "overlay";
     if (win) msgEl.dataset.cont = "1";
-    msgEl.innerHTML = `<div><h3>${win ? (tr ? "Unicorn oldun 🦄" : "You're a unicorn 🦄") : (tr ? "Nakit bitti 💸" : "Out of runway 💸")}</h3>
+    msgEl.innerHTML = `<div><h3>${win ? (tr ? "Halka arza çıktın!" : "You went public!") : (tr ? "Nakit bitti" : "Out of runway")}</h3>
       <p>${tr ? "Skor" : "Score"}: <b>${score}</b>${!win && Player.name && SCORE_API ? (tr ? " · skor tablosuna yazıldı" : " · saved to leaderboard") : ""}</p>
       <button class="btn btn-sun" type="button">${win ? (tr ? "Devam et" : "Keep going") : (tr ? "Yeniden kur" : "Start over")}</button></div>`;
     msgEl.querySelector("button").addEventListener("click", () => { win ? hideMsg() : (submitOnce(), newGame()); board.focus({ preventScroll: true }); });
