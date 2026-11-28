@@ -254,6 +254,25 @@
 
   /* Drone */
   #drone { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; cursor: pointer; }
+  /* Tam ekran oyun modu */
+  .fs-btn {
+    position: absolute; right: 12px; bottom: 12px; z-index: 3;
+    width: 44px; height: 44px; border: 0; border-radius: 12px; cursor: pointer;
+    display: grid; place-items: center; color: #fff;
+    background: rgba(14,22,48,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  .fs-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .fs-btn .i-close, .fs-btn.on .i-open { display: none; }
+  .fs-btn.on .i-close { display: block; }
+  .fs-btn.on { top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); bottom: auto; left: auto; transform: translateY(52px); }
+  .board-frame.immersive {
+    position: fixed; inset: 0; z-index: 100; border-radius: 0; box-shadow: none;
+    background: #0E1630; display: grid; place-items: center; overscroll-behavior: contain;
+  }
+  .board-frame.immersive #drone { aspect-ratio: auto; max-width: none; }
+  .board-frame.immersive .overlay h3 { font-size: clamp(1.8rem, 6vmin, 3rem); }
+  html.game-lock, html.game-lock body { overflow: hidden; height: 100%; overscroll-behavior: none; }
+  html.game-lock .nav { display: none; }
   .overlay {
     position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
     background: rgba(14,22,48,.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
@@ -429,6 +448,10 @@
       <div class="stage" role="tabpanel" id="panel-drone" aria-labelledby="tab-drone">
         <div class="board-frame">
           <canvas id="drone" width="960" height="540" tabindex="0" aria-label="Drone oyunu"></canvas>
+          <button class="fs-btn" id="drone-fs" type="button" aria-label="Tam ekran oyna">
+            <svg class="i-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            <svg class="i-close" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
           <div class="overlay" id="drone-overlay">
             <div>
               <h3 id="drone-title"><span lang="tr">Drone Rotası</span><span lang="en">Drone Route</span></h3>
@@ -762,14 +785,14 @@ const Leaderboard = (function () {
 /* ================= Oyun 1: Drone Rotası ================= */
 const Drone = (function () {
   const cv = $("#drone"), ctx = cv.getContext("2d");
-  const W = 960, H = 540;
-  const overlay = $("#drone-overlay");
+  let W = 960, H = 540, SC = 1, immersive = false;   // mantıksal çözünürlük; tam ekranda ekran oranına uyar
+  const overlay = $("#drone-overlay"), frameEl = cv.parentElement;
   let state = "idle", d, towers, cells, score, best = 0, speed, frame, spawnT, raf, lastTs = 0;
   $("#d-best").textContent = best;
   addEventListener("player-best", e => { best = e.detail.drone || 0; $("#d-best").textContent = best; });
 
   function reset() {
-    d = { x: 220, y: H / 2, vy: 0, battery: 100, tilt: 0 };
+    d = { x: Math.round(Math.min(220, W * 0.3)), y: H / 2, vy: 0, battery: 100, tilt: 0 };
     towers = []; cells = []; score = 0; speed = 4.2; frame = 0; spawnT = 0;
     $("#d-score").textContent = 0;
   }
@@ -778,7 +801,7 @@ const Drone = (function () {
     if (d.battery > 0) { d.vy = -7.6; d.battery = Math.max(0, d.battery - 1.2); }
   }
   function spawn() {
-    const gap = Math.max(150, 210 - score * 2.5);
+    const gap = Math.max(150, 210 - score * 2.5) * Math.min(1.3, Math.max(1, H / 600));
     const top = 50 + Math.random() * (H - gap - 130);
     towers.push({ x: W + 40, w: 74, top, gap, passed: false });
     if (Math.random() < 0.55) cells.push({ x: W + 40 + 37, y: top + gap / 2, got: false });
@@ -818,7 +841,8 @@ const Drone = (function () {
     Leaderboard.submit("drone", score);
   }
   /* ---------- İstanbul silüeti (katmanlar bir kez çizilir, sonra kaydırılır) ---------- */
-  const HORIZON = H - 70, QUAY = H - 28, TW = 3600;
+  const TW = 3600;
+  let HORIZON, QUAY, SUN_X, skyL, cloudL, farL, midL, wallTex;
   function layer(draw) { const c = document.createElement("canvas"); c.width = TW; c.height = H; draw(c.getContext("2d")); return c; }
   function minaret(g, x, base, h, w, col) {
     g.fillStyle = col;
@@ -853,17 +877,17 @@ const Drone = (function () {
   }
 
   // Gökyüzü: aydınlık gündüz, güneş ve bulutlar
-  const skyL = layer(g => {
+  const mkSky = () => layer(g => {
     const gr = g.createLinearGradient(0, 0, 0, HORIZON);
     gr.addColorStop(0, "#3E9BEA"); gr.addColorStop(0.55, "#7CC2F5"); gr.addColorStop(1, "#D6EEFF");
     g.fillStyle = gr; g.fillRect(0, 0, W, HORIZON);
-    const sun = g.createRadialGradient(790, 96, 0, 790, 96, 170);
+    const sun = g.createRadialGradient(SUN_X, 96, 0, SUN_X, 96, 170);
     sun.addColorStop(0, "rgba(255,246,200,.95)"); sun.addColorStop(0.18, "rgba(255,236,160,.75)"); sun.addColorStop(1, "rgba(255,236,160,0)");
-    g.fillStyle = sun; g.fillRect(560, 0, 400, 300);
-    g.fillStyle = "#FFF6D0"; g.beginPath(); g.arc(790, 96, 30, 0, 7); g.fill();
+    g.fillStyle = sun; g.fillRect(SUN_X - 230, 0, 400, 300);
+    g.fillStyle = "#FFF6D0"; g.beginPath(); g.arc(SUN_X, 96, 30, 0, 7); g.fill();
   });
   // Bulutlar (yavaş kayan ayrı katman)
-  const cloudL = layer(g => {
+  const mkCloud = () => layer(g => {
     const puff = (x, y, s, a) => {
       g.fillStyle = `rgba(255,255,255,${a})`;
       [[0, 0, 34], [30, -12, 28], [58, 2, 30], [-28, 6, 22], [84, 10, 20]].forEach(([dx, dy, r]) => { g.beginPath(); g.arc(x + dx * s, y + dy * s, r * s, 0, 7); g.fill(); });
@@ -886,7 +910,7 @@ const Drone = (function () {
     g.lineWidth = 0.7;
     for (let x = p1 + 14; x < p2; x += 14) { const t = (x - p1) / (p2 - p1), y = top + 2 + (deck + 56 - top) * 2 * t * (1 - t); g.beginPath(); g.moveTo(x, Math.min(y, deck - 6)); g.lineTo(x, deck - 4); g.stroke(); }
   }
-  const farL = layer(g => {
+  const mkFar = () => layer(g => {
     const col = "#9FC1E6";
     g.fillStyle = col;
     g.beginPath(); g.moveTo(0, HORIZON);
@@ -897,7 +921,7 @@ const Drone = (function () {
   });
 
   // Orta katman: seçilen 15 eser, listedeki sırayla yan yana
-  const midL = layer(g => {
+  const mkMid = () => layer(g => {
     const col = "#4F73B5", base = HORIZON + 2, win = "rgba(255,255,255,.32)";
     const W_ = (f) => { g.fillStyle = win; f(); g.fillStyle = col; };
     g.fillStyle = col;
@@ -1022,7 +1046,7 @@ const Drone = (function () {
     ctx.fillStyle = gr; ctx.fillRect(0, HORIZON, W, QUAY - HORIZON);
     // güneş yansıması
     ctx.fillStyle = "rgba(255,246,200,.55)";
-    for (let i = 0; i < 6; i++) { const y = HORIZON + 5 + i * 6, w = 46 - i * 5 + Math.sin(frame * 0.08 + i) * 8; ctx.fillRect(790 - w / 2, y, w, 2); }
+    for (let i = 0; i < 6; i++) { const y = HORIZON + 5 + i * 6, w = 46 - i * 5 + Math.sin(frame * 0.08 + i) * 8; ctx.fillRect(SUN_X - w / 2, y, w, 2); }
     // dalgalar
     ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.lineWidth = 1.2;
     const off = (frame * 1.4) % 60;
@@ -1079,7 +1103,7 @@ const Drone = (function () {
   }
   /* ---------- Surlar (Theodosius surları gibi: kesme taş, tuğla hatıllar, mazgallar) ---------- */
   const WALL_W = 74;
-  const wallTex = (() => {
+  const mkWall = () => (() => {
     const c = document.createElement("canvas"); c.width = WALL_W; c.height = H; const g = c.getContext("2d");
     let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     let y = 0, course = 0;
@@ -1204,7 +1228,53 @@ const Drone = (function () {
     ctx.fillStyle = "#fff"; ctx.font = "600 22px Geist, system-ui, sans-serif"; ctx.textAlign = "center";
     ctx.fillText(score, 46, 42); ctx.textAlign = "left";
   }
-  function render() { drawSky(); drawTowers(); drawCells(); drawDrone(); if (state !== "idle") drawHUD(); }
+  function render() { ctx.setTransform(SC, 0, 0, SC, 0, 0); drawSky(); drawTowers(); drawCells(); drawDrone(); if (state !== "idle") drawHUD(); }
+
+  /* ---------- Boyut ve tam ekran oyun modu ---------- */
+  function buildScene() {
+    HORIZON = H - 70; QUAY = H - 28; SUN_X = Math.round(W * 0.82);
+    skyL = mkSky(); cloudL = mkCloud(); farL = mkFar(); midL = mkMid(); wallTex = mkWall();
+  }
+  function viewport() {
+    const vv = window.visualViewport;
+    return vv ? [Math.round(vv.width), Math.round(vv.height)] : [innerWidth, innerHeight];
+  }
+  function setSize() {
+    let nW = 960, nH = 540, nSC = 1;
+    if (immersive) {
+      const [vw, vh] = viewport();
+      if (vw >= vh) { nH = 540; nW = Math.round(Math.min(1400, Math.max(720, 540 * vw / vh))); }
+      else { nW = 540; nH = Math.round(Math.min(1200, Math.max(720, 540 * vh / vw))); }
+      nSC = Math.min(2, Math.max(1, (vw * (devicePixelRatio || 1)) / nW));
+      cv.style.width = vw + "px"; cv.style.height = vh + "px";
+    } else { cv.style.width = ""; cv.style.height = ""; }
+    const sceneChanged = nW !== W || nH !== H;
+    W = nW; H = nH; SC = nSC;
+    cv.width = Math.round(W * SC); cv.height = Math.round(H * SC);
+    if (sceneChanged || !skyL) buildScene();
+    if (d) { d.x = Math.round(Math.min(220, W * 0.3)); d.y = Math.min(d.y, H - 60); }
+    render();
+  }
+  function enterImmersive() {
+    if (immersive) return;
+    immersive = true; frameEl.classList.add("immersive"); document.documentElement.classList.add("game-lock");
+    try { const r = frameEl.requestFullscreen && frameEl.requestFullscreen({ navigationUI: "hide" }); if (r && r.catch) r.catch(() => {}); } catch (e) {}
+    setSize(); fsBtn.setAttribute("aria-label", LANG === "tr" ? "Tam ekrandan çık" : "Exit full screen"); fsBtn.classList.add("on");
+  }
+  function exitImmersive() {
+    if (!immersive) return;
+    if (state === "play") { state = "over"; end(); }
+    immersive = false; frameEl.classList.remove("immersive"); document.documentElement.classList.remove("game-lock");
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+    setSize(); fsBtn.setAttribute("aria-label", LANG === "tr" ? "Tam ekran oyna" : "Play full screen"); fsBtn.classList.remove("on");
+  }
+  const fsBtn = $("#drone-fs");
+  fsBtn.addEventListener("click", e => { e.stopPropagation(); immersive ? exitImmersive() : enterImmersive(); });
+  fsBtn.addEventListener("pointerdown", e => e.stopPropagation());
+  let rsT; const onResize = () => { if (!immersive) return; clearTimeout(rsT); rsT = setTimeout(setSize, 120); };
+  addEventListener("resize", onResize); if (window.visualViewport) visualViewport.addEventListener("resize", onResize);
+  addEventListener("keydown", e => { if (e.key === "Escape" && immersive) exitImmersive(); });
+  const coarse = matchMedia("(pointer: coarse)").matches;
   function loop(ts) {
     if (state !== "play") return;
     if (ts - lastTs >= 15) { // ekran yenileme hızından bağımsız ~60 adım/sn
@@ -1216,6 +1286,7 @@ const Drone = (function () {
   }
   function start() {
     if (!Player.ready()) return Player.ensure(start);
+    if (coarse) enterImmersive();          // telefonda oyun tam ekran açılır
     reset(); state = "play"; overlay.hidden = true; cv.focus({ preventScroll: true });
     lastTs = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
     thrust();
@@ -1225,8 +1296,8 @@ const Drone = (function () {
   cv.addEventListener("keydown", e => {
     if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); state === "play" ? thrust() : start(); }
   });
-  reset(); render();
-  return { pause() { if (state === "play") { state = "over"; end(); } } };
+  buildScene(); reset(); render();
+  return { pause() { if (state === "play") { state = "over"; end(); } exitImmersive(); } };
 })();
 
 /* ================= Oyun 2: Girişim 2048 ================= */
